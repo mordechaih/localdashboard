@@ -329,8 +329,8 @@ private struct PullRequestChip: View {
                 Text("·")
                 diffStatText
                 HStack(spacing: 3) {
+                    Image(systemName: changedFilesSymbol)
                     Text("\(pr.changedFiles)")
-                    Image(systemName: "document.badge.plus.fill")
                 }
                 Spacer()
                 Text(ageLabel(pr.ageDays))
@@ -366,6 +366,12 @@ private struct PullRequestChip: View {
 
     private var repoShortName: String {
         pr.repo.split(separator: "/").last.map(String.init) ?? pr.repo
+    }
+
+    /// Plus badge when the PR is net-additive (or neutral), minus badge when more lines are
+    /// deleted than added.
+    private var changedFilesSymbol: String {
+        pr.additions - pr.deletions < 0 ? "rectangle.stack.fill.badge.minus" : "rectangle.stack.fill.badge.plus"
     }
 }
 
