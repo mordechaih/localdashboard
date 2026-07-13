@@ -48,6 +48,13 @@ final class BranchActionsTests: XCTestCase {
         XCTAssertTrue(script.contains("git checkout 'x\";touch pwn;echo\"y'"))
     }
 
+    func testScriptContentsEscapesEmbeddedSingleQuote() {
+        let script = prDraftScriptContents(dir: "/clones/r", branch: "it's; echo pwn", prompt: "p")
+        // The embedded single quote is closed/escaped/reopened as '\'' so the whole name stays one
+        // literal argument and `; echo pwn` never executes.
+        XCTAssertTrue(script.contains("git checkout 'it'\\''s; echo pwn'"))
+    }
+
     func testLaunchSubstitutesScriptPathAndRunsViaSh() {
         let runner = ArgCapturingRunner()
         var writtenTo: String?
