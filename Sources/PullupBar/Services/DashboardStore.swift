@@ -9,6 +9,9 @@ final class DashboardStore: ObservableObject {
     @Published var closedPullRequests: [PullRequestInfo] = []
     @Published var closedUnavailable = false
     @Published var closedLoaded = false
+    @Published var noPRBranches: [BranchInfo] = []
+    @Published var branchesUnavailable = false
+    @Published var branchesLoaded = false
 
     let settings: SettingsStore
 
@@ -60,6 +63,50 @@ final class DashboardStore: ObservableObject {
         } else {
             closedUnavailable = true
         }
+    }
+
+    /// Fetch branches without a PR. Decoupled from the poll timer — called on first panel
+    /// appearance and on explicit refresh only.
+    func refreshBranches() async {
+        let runner = processRunner
+        let roots = settings.repoSearchRoots
+        let result = await Task.detached(priority: .utility) { () -> [BranchInfo]? in
+            fetchBranchesWithoutPR(runner: runner, roots: roots)
+        }.value
+
+        branchesLoaded = true
+        if let result {
+            noPRBranches = result
+            branchesUnavailable = false
+        } else {
+            branchesUnavailable = true
+        }
+    }
+
+    /// Load branches once (first time the panel appears). Subsequent loads go through refresh.
+    func loadBranchesIfNeeded() {
+        guard !branchesLoaded else { return }
+        Task { await refreshBranches() }
+    }
+
+    func checkoutBranch(_ branch: BranchInfo) {
+        let runner = processRunner
+        Task.detached(priority: .utility) { checkoutBranchLocally(branch, runner: runner) }
+    }
+
+    /// Delete the local branch, then drop it from the list so the row disappears without a reload.
+    func archiveBranch(_ branch: BranchInfo) {
+        let runner = processRunner
+        Task {
+            let ok = await Task.detached(priority: .utility) { archiveBranchLocally(branch, runner: runner) }.value
+            if ok { noPRBranches.removeAll { $0.id == branch.id } }
+        }
+    }
+
+    func createPRForBranch(_ branch: BranchInfo) {
+        let runner = processRunner
+        let command = settings.createPRCommand
+        Task.detached(priority: .utility) { launchPRDraftSession(branch, command: command, runner: runner) }
     }
 
     /// Switch filters, loading closed PRs on first access to either the Merged or Closed tab
