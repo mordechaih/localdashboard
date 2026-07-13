@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# Builds LocalDashboard.app: a real double-clickable app bundle wrapping the
+# Builds PullupBar.app: a real double-clickable app bundle wrapping the
 # SwiftPM release binary, so the app can run without a terminal (Finder,
 # Login Items, Dock/Applications) instead of only via `swift run`.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="LocalDashboard"
+APP_NAME="PullupBar"
 BUILD_DIR=".build"
 APP_BUNDLE="${BUILD_DIR}/${APP_NAME}.app"
 BINARY_PATH="${BUILD_DIR}/release/${APP_NAME}"
-VERSION="0.1.2"
+# Derive the version from the latest git tag (e.g. "v0.1.2" -> "0.1.2") so the release binary,
+# Info.plist, and git history share a single source of truth. Falls back to 0.0.0 outside a
+# tagged git checkout (e.g. a source tarball).
+VERSION="$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')"
+VERSION="${VERSION:-0.0.0}"
 
 swift build -c release
 
@@ -26,7 +30,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" <<PLIST
     <key>CFBundleExecutable</key>
     <string>${APP_NAME}</string>
     <key>CFBundleIdentifier</key>
-    <string>com.mordechaihammer.localdashboard</string>
+    <string>com.mordechaihammer.pullupbar</string>
     <key>CFBundleName</key>
     <string>${APP_NAME}</string>
     <key>CFBundleShortVersionString</key>

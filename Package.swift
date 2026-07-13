@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "LocalDashboard",
+    name: "PullupBar",
     platforms: [.macOS(.v13)],
     targets: [
         .executableTarget(
-            name: "LocalDashboard",
-            path: "Sources/LocalDashboard"
+            name: "PullupBar",
+            path: "Sources/PullupBar"
         ),
         .testTarget(
-            name: "LocalDashboardTests",
-            dependencies: ["LocalDashboard"],
-            path: "Tests/LocalDashboardTests"
+            name: "PullupBarTests",
+            dependencies: ["PullupBar"],
+            path: "Tests/PullupBarTests"
         )
     ]
 )

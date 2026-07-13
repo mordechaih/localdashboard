@@ -3,3 +3,6 @@
 DerivedData/
 *.xcodeproj/xcuserdata/
 .DS_Store
+
+# Local editor/agent state — machine-specific, may contain absolute paths.
+.claude/

@@ -1,10 +1,10 @@
 import XCTest
-@testable import LocalDashboard
+@testable import PullupBar
 
 private struct FakeRunner: ProcessRunning {
     let searchOutput: String?
     func run(_ path: String, _ args: [String]) -> String? {
-        if path == "/bin/zsh" { return "/usr/bin/gh" }
+        if args == ["-l", "-c", "command -v gh"] { return "/usr/bin/gh" }
         return args.contains("search") ? searchOutput : nil
     }
 }
@@ -16,7 +16,7 @@ private struct FakeStateRunner: ProcessRunning {
     var unmergedOutput: String? = "[]"
 
     func run(_ path: String, _ args: [String]) -> String? {
-        if path == "/bin/zsh" { return "/usr/bin/gh" }
+        if args == ["-l", "-c", "command -v gh"] { return "/usr/bin/gh" }
         guard args.contains("search") else { return nil }
         if args.contains("--merged") { return mergedOutput }
         if args.contains("is:unmerged") { return unmergedOutput }

@@ -1,5 +1,5 @@
 import XCTest
-@testable import LocalDashboard
+@testable import PullupBar
 
 private struct FakeCheckoutRunner: ProcessRunning {
     let ghPath: String?
@@ -8,7 +8,7 @@ private struct FakeCheckoutRunner: ProcessRunning {
     let checkoutSucceeds: Bool
 
     func run(_ path: String, _ args: [String]) -> String? {
-        if path == "/bin/zsh" { return ghPath }
+        if args == ["-l", "-c", "command -v gh"] { return ghPath }
         return nil
     }
 
@@ -20,18 +20,36 @@ private struct FakeCheckoutRunner: ProcessRunning {
 final class PullRequestCheckoutTests: XCTestCase {
     func testLocalRepoDirectoryFindsExistingClone() {
         let dir = localRepoDirectory(
-            forRepo: "mordechaih/localdashboard",
-            searchRoot: "/Users/example/GitHub",
-            fileExists: { $0 == "/Users/example/GitHub/localdashboard/.git" }
+            forRepo: "mordechaih/pullupbar",
+            searchRoots: ["/Users/example/GitHub"],
+            fileExists: { $0 == "/Users/example/GitHub/pullupbar/.git" }
         )
-        XCTAssertEqual(dir, "/Users/example/GitHub/localdashboard")
+        XCTAssertEqual(dir, "/Users/example/GitHub/pullupbar")
+    }
+
+    func testLocalRepoDirectorySearchesRootsInOrder() {
+        let dir = localRepoDirectory(
+            forRepo: "owner/pullupbar",
+            searchRoots: ["/Users/example/code", "/Users/example/GitHub"],
+            fileExists: { $0 == "/Users/example/GitHub/pullupbar/.git" }
+        )
+        XCTAssertEqual(dir, "/Users/example/GitHub/pullupbar")
     }
 
     func testLocalRepoDirectoryReturnsNilWhenNoCloneFound() {
         let dir = localRepoDirectory(
-            forRepo: "mordechaih/localdashboard",
-            searchRoot: "/Users/example/GitHub",
+            forRepo: "mordechaih/pullupbar",
+            searchRoots: ["/Users/example/GitHub"],
             fileExists: { _ in false }
+        )
+        XCTAssertNil(dir)
+    }
+
+    func testLocalRepoDirectoryReturnsNilWhenNoRoots() {
+        let dir = localRepoDirectory(
+            forRepo: "mordechaih/pullupbar",
+            searchRoots: [],
+            fileExists: { _ in true }
         )
         XCTAssertNil(dir)
     }
@@ -44,7 +62,13 @@ final class PullRequestCheckoutTests: XCTestCase {
 
     func testCheckoutPullRequestBranchFailsWhenGHUnresolved() {
         let runner = FakeCheckoutRunner(ghPath: nil, checkoutSucceeds: true)
-        let result = checkoutPullRequestBranch(repo: "o/r", number: 5, runner: runner, localRepoDir: "/tmp/r")
+        let result = checkoutPullRequestBranch(
+            repo: "o/r",
+            number: 5,
+            runner: runner,
+            localRepoDir: "/tmp/r",
+            fileExists: { _ in false }
+        )
         XCTAssertFalse(result)
     }
 
@@ -54,6 +78,7 @@ final class PullRequestCheckoutTests: XCTestCase {
             repo: "o/definitely-not-a-real-cloned-repo-\(UUID().uuidString)",
             number: 5,
             runner: runner,
+            searchRoots: [],
             localRepoDir: nil
         )
         XCTAssertFalse(result)

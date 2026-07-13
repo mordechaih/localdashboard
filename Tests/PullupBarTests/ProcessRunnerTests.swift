@@ -1,5 +1,5 @@
 import XCTest
-@testable import LocalDashboard
+@testable import PullupBar
 
 final class ProcessRunnerTests: XCTestCase {
     func testSystemProcessRunnerExecutesRealCommand() {

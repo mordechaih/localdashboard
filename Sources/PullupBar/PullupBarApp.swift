@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct LocalDashboardApp: App {
+struct PullupBarApp: App {
     @StateObject private var store = DashboardStore()
 
     var body: some Scene {

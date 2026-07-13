@@ -1,5 +1,5 @@
 import XCTest
-@testable import LocalDashboard
+@testable import PullupBar
 
 final class PullRequestInfoTests: XCTestCase {
     private func makePR(json: String) -> PullRequestInfo {
