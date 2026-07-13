@@ -33,8 +33,13 @@ final class DashboardStore: ObservableObject {
         self.dataTask = dataTask
     }
 
-    func refreshSessions() {
-        sessionRows = computeSessionRows(sessionsDir: sessionsDir, projectsDir: projectsDir)
+    func refreshSessions() async {
+        let dir1 = sessionsDir
+        let dir2 = projectsDir
+        let rows = await Task.detached(priority: .utility) { () -> [SessionRow] in
+            computeSessionRows(sessionsDir: dir1, projectsDir: dir2)
+        }.value
+        sessionRows = rows
     }
 
     func refreshUsage() async {
@@ -61,15 +66,16 @@ final class DashboardStore: ObservableObject {
     }
 
     func refreshAll() {
-        refreshSessions()
+        Task { await refreshSessions() }
         Task { await refreshUsage() }
         Task { await refreshPullRequests() }
     }
 
     func startPolling() {
+        guard sessionTimer == nil else { return }
         refreshAll()
         sessionTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refreshSessions() }
+            Task { @MainActor in await self?.refreshSessions() }
         }
         apiTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in

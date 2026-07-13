@@ -1,7 +1,7 @@
 import Foundation
 
 struct PullRequestInfo: Identifiable, Sendable {
-    let id: Int
+    let id: String
     let number: Int
     let title: String
     let url: String
@@ -42,7 +42,7 @@ func parseSearchResults(_ data: Data) -> [PullRequestInfo] {
     return items.compactMap { item in
         guard let created = ghDateFormatter.date(from: item.createdAt) else { return nil }
         return PullRequestInfo(
-            id: item.number,
+            id: "\(item.repository.nameWithOwner)#\(item.number)",
             number: item.number,
             title: item.title,
             url: item.url,

@@ -67,6 +67,17 @@ final class PullRequestInfoTests: XCTestCase {
         XCTAssertNil(enriched.reviewDecision)
     }
 
+    func testEnrichFallsBackToPendingForMixedNonFailureNonSuccessStates() {
+        let base = makePR(json: #"""
+        [{"number":5,"title":"t","url":"https://x","isDraft":false,"repository":{"nameWithOwner":"o/r"},"createdAt":"2026-06-01T12:00:00Z"}]
+        """#)
+        let detail = #"{"statusCheckRollup":[{"conclusion":"SUCCESS","state":null},{"conclusion":null,"state":"PENDING"}],"reviewDecision":null,"mergeable":"MERGEABLE"}"#
+
+        let enriched = enrichPullRequest(base, withDetailJSON: detail.data(using: .utf8)!)
+
+        XCTAssertEqual(enriched.ciStatus, "PENDING")
+    }
+
     func testAgeDaysComputedFromCreatedAt() {
         let base = makePR(json: #"""
         [{"number":4,"title":"t","url":"https://x","isDraft":false,"repository":{"nameWithOwner":"o/r"},"createdAt":"2020-01-01T00:00:00Z"}]

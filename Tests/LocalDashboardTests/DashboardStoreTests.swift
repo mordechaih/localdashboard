@@ -15,7 +15,7 @@ private struct FakeRunner: ProcessRunning {
 
 final class DashboardStoreTests: XCTestCase {
     @MainActor
-    func testRefreshSessionsPopulatesRowsForLiveSession() throws {
+    func testRefreshSessionsPopulatesRowsForLiveSession() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let sessionsDir = root.appendingPathComponent("sessions")
         let projectsDir = root.appendingPathComponent("projects")
@@ -35,7 +35,7 @@ final class DashboardStoreTests: XCTestCase {
             .write(to: projDir.appendingPathComponent("\(sessionId).jsonl"), atomically: true, encoding: .utf8)
 
         let store = DashboardStore(sessionsDir: sessionsDir.path, projectsDir: projectsDir.path)
-        store.refreshSessions()
+        await store.refreshSessions()
 
         XCTAssertEqual(store.sessionRows.count, 1)
         XCTAssertEqual(store.sessionRows.first?.name, "proj")

@@ -8,13 +8,15 @@ struct LocalDashboardApp: App {
     var body: some Scene {
         MenuBarExtra {
             DashboardPanelView(store: store)
-                .onAppear { store.startPolling() }
         } label: {
-            if store.badgeCount > 0 {
-                Image(nsImage: renderBadgeIcon(count: store.badgeCount))
-            } else {
-                Image(systemName: "gauge.medium")
+            Group {
+                if store.badgeCount > 0 {
+                    Image(nsImage: renderBadgeIcon(count: store.badgeCount))
+                } else {
+                    Image(systemName: "gauge.medium")
+                }
             }
+            .task { store.startPolling() }
         }
         .menuBarExtraStyle(.window)
     }

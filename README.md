@@ -31,3 +31,4 @@ data source fails — one broken source never blocks the rest of the panel.
 - macOS 13+
 - `gh` CLI, authenticated (`gh auth login`), for the pull requests section
 - Claude Code Keychain credentials present (`Claude Code-credentials`), for the usage section
+- Launch via `swift run` (or a terminal) so `gh` resolves through your shell's `PATH` — a `.app` bundle launched from Finder may not inherit it.

@@ -32,4 +32,23 @@ final class UsageWindowInfoTests: XCTestCase {
     func testReturnsNilOnMalformedJSON() {
         XCTAssertNil(parseUsageWindowResponse("not json".data(using: .utf8)!))
     }
+
+    func testDaysUntilResetWithinSameMonth() {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        let date = cal.date(from: DateComponents(year: 2026, month: 7, day: 15))!
+        XCTAssertEqual(daysUntilBillingReset(from: date, resetDay: 1, calendar: cal), 17)
+    }
+
+    func testResetLabelToday() {
+        XCTAssertEqual(resetLabel(forDays: 0), "today")
+    }
+
+    func testResetLabelOneDay() {
+        XCTAssertEqual(resetLabel(forDays: 1), "in 1 day")
+    }
+
+    func testResetLabelMultiDay() {
+        XCTAssertEqual(resetLabel(forDays: 5), "in 5d")
+    }
 }

@@ -16,7 +16,7 @@ struct UsageSectionView: View {
                     .foregroundStyle(color(for: usage.usedPercent))
                 ProgressView(value: Double(usage.usedPercent), total: 100)
                     .tint(color(for: usage.usedPercent))
-                Text(String(format: "$%.2f / $%.0f", usage.usedUSD, usage.limitUSD))
+                Text(String(format: "$%.2f / $%.0f", usage.usedUSD, usage.limitUSD) + " · resets \(resetLabel(forDays: daysUntilBillingReset()))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
