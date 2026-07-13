@@ -423,7 +423,9 @@ private struct CopyLinkIconButton: View {
                 copied = false
             }
         } label: {
+            // Fixed footprint so the octicon↔checkmark crossfade doesn't shift the row.
             icon
+                .frame(width: 16, height: 16)
                 .tapBounce(tapTrigger)
                 .animation(.easeInOut(duration: 0.2), value: copied)
         }
@@ -439,7 +441,7 @@ private struct CopyLinkIconButton: View {
     private var icon: some View {
         if copied {
             Image(systemName: "checkmark")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .transition(.opacity)
         } else {
             OcticonImage(paths: Octicons.link)
