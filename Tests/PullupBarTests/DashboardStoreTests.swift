@@ -102,4 +102,13 @@ final class DashboardStoreTests: XCTestCase {
         XCTAssertTrue(store.closedLoaded)
         XCTAssertTrue(store.closedUnavailable)
     }
+
+    func testCreatePRCommandDefaultsAndPersists() {
+        let defaults = UserDefaults(suiteName: "createpr-\(UUID().uuidString)")!
+        let a = SettingsStore(defaults: defaults)
+        XCTAssertEqual(a.createPRCommand, SettingsStore.defaultCreatePRCommand)
+        a.createPRCommand = "open -a iTerm {script}"
+        let b = SettingsStore(defaults: defaults)
+        XCTAssertEqual(b.createPRCommand, "open -a iTerm {script}")
+    }
 }
