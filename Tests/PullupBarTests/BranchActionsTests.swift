@@ -77,4 +77,35 @@ final class BranchActionsTests: XCTestCase {
         XCTAssertFalse(ok)
         XCTAssertNil(runner.lastArgs)
     }
+
+    func testClaudeSessionScriptCdsAndRunsBareClaude() {
+        let script = claudeSessionScriptContents(dir: "/clones/r")
+        XCTAssertTrue(script.contains("cd '/clones/r'"))
+        XCTAssertTrue(script.contains("&& claude"))
+        // A bare session opens interactively — no branch checkout and no prompt.
+        XCTAssertFalse(script.contains("git checkout"))
+    }
+
+    func testClaudeSessionScriptQuotesDir() {
+        let script = claudeSessionScriptContents(dir: "/weird'; touch pwn")
+        XCTAssertTrue(script.contains("cd '/weird'\\''; touch pwn'"))
+    }
+
+    func testLaunchClaudeSessionSubstitutesScriptPathAndRunsViaSh() {
+        let runner = ArgCapturingRunner()
+        let ok = launchClaudeSession(
+            dir: "/clones/r", command: "open -a iTerm {script}", runner: runner,
+            writeScript: { _ in "/tmp/x.command" }
+        )
+        XCTAssertTrue(ok)
+        XCTAssertEqual(runner.lastPath, "/bin/sh")
+        XCTAssertEqual(runner.lastArgs, ["-c", "open -a iTerm /tmp/x.command"])
+    }
+
+    func testLaunchClaudeSessionFailsWhenScriptCannotBeWritten() {
+        let runner = ArgCapturingRunner()
+        let ok = launchClaudeSession(dir: "/clones/r", command: "open {script}", runner: runner, writeScript: { _ in nil })
+        XCTAssertFalse(ok)
+        XCTAssertNil(runner.lastArgs)
+    }
 }

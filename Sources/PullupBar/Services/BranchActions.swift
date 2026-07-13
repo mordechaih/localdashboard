@@ -33,11 +33,20 @@ func prDraftScriptContents(dir: String, branch: String, prompt: String) -> Strin
     """
 }
 
-/// Default: write the PR-draft script to a temp `.command` file and mark it executable.
+/// The `.command` script body for an interactive Claude session in a clone: `cd` in, launch
+/// `claude` with no prompt. Used by the "open Claude on checkout" setting.
+func claudeSessionScriptContents(dir: String) -> String {
+    """
+    #!/bin/sh
+    cd \(shellQuote(dir)) && claude
+    """
+}
+
+/// Default: write a script to a temp `.command` file and mark it executable.
 /// Returns the file path, or nil if writing fails.
-private func writePRDraftScript(_ contents: String) -> String? {
+private func writeCommandScript(_ contents: String) -> String? {
     let url = FileManager.default.temporaryDirectory
-        .appendingPathComponent("pullupbar-createpr-\(UUID().uuidString).command")
+        .appendingPathComponent("pullupbar-\(UUID().uuidString).command")
     do {
         try contents.write(to: url, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
@@ -47,18 +56,46 @@ private func writePRDraftScript(_ contents: String) -> String? {
     }
 }
 
-/// Writes the PR-draft script, then runs the user's launch `command` (with `{script}` replaced by
-/// the script path) through `/bin/sh -c`, so templates like `open {script}` or
-/// `open -a iTerm {script}` work. `writeScript` is injected for tests.
+/// Writes `contents` to a temp `.command` script, then runs the user's launch `command` (with
+/// `{script}` replaced by the script path) through `/bin/sh -c`, so templates like `open {script}`
+/// or `open -a iTerm {script}` work. `writeScript` is injected for tests.
+@discardableResult
+private func launchScript(
+    _ contents: String,
+    command: String,
+    runner: ProcessRunning,
+    writeScript: (String) -> String?
+) -> Bool {
+    guard let scriptPath = writeScript(contents) else { return false }
+    let resolved = command.replacingOccurrences(of: "{script}", with: scriptPath)
+    return runner.run("/bin/sh", ["-c", resolved]) != nil
+}
+
+/// Opens a terminal that checks out `branch` and launches Claude Code with the PR-draft prompt.
 @discardableResult
 func launchPRDraftSession(
     _ branch: BranchInfo,
     command: String,
     runner: ProcessRunning,
-    writeScript: (String) -> String? = writePRDraftScript
+    writeScript: (String) -> String? = writeCommandScript
 ) -> Bool {
-    let contents = prDraftScriptContents(dir: branch.localCloneDir, branch: branch.name, prompt: prDraftPrompt)
-    guard let scriptPath = writeScript(contents) else { return false }
-    let resolved = command.replacingOccurrences(of: "{script}", with: scriptPath)
-    return runner.run("/bin/sh", ["-c", resolved]) != nil
+    launchScript(
+        prDraftScriptContents(dir: branch.localCloneDir, branch: branch.name, prompt: prDraftPrompt),
+        command: command, runner: runner, writeScript: writeScript
+    )
+}
+
+/// Opens a terminal with an interactive Claude Code session in `dir` (no prompt). Used after a
+/// checkout when the "open Claude on checkout" setting is enabled.
+@discardableResult
+func launchClaudeSession(
+    dir: String,
+    command: String,
+    runner: ProcessRunning,
+    writeScript: (String) -> String? = writeCommandScript
+) -> Bool {
+    launchScript(
+        claudeSessionScriptContents(dir: dir),
+        command: command, runner: runner, writeScript: writeScript
+    )
 }

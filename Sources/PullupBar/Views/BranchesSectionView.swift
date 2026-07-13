@@ -107,31 +107,42 @@ private struct BranchChip: View {
         if confirmingArchive {
             HStack(spacing: 4) {
                 Text("Delete?").font(.system(size: 12)).foregroundStyle(.secondary)
-                BranchIconButton(systemName: "checkmark", help: "Confirm delete", tint: .red) {
+                BranchIconButton(help: "Confirm delete", tint: .red) {
                     onArchive(branch)
                     confirmingArchive = false
+                } icon: {
+                    Image(systemName: "checkmark")
                 }
-                BranchIconButton(systemName: "xmark", help: "Cancel") {
+                BranchIconButton(help: "Cancel") {
                     confirmingArchive = false
+                } icon: {
+                    Image(systemName: "xmark")
                 }
             }
             .padding(.horizontal, 6)
         } else {
             // Indexed right-to-left so the stagger emanates from the trailing anchor: the
-            // rightmost icon (index 0) pops in first, then cascades left.
+            // rightmost icon (index 0) pops in first, then cascades left. Checkout sits 2nd from
+            // the right (index 1) to match the PR row's pill.
             HStack(spacing: 4) {
                 if branch.hasLocal {
-                    BranchIconButton(systemName: "trash", help: "Archive (delete local branch)") {
+                    BranchIconButton(help: "Archive (delete local branch)") {
                         confirmingArchive = true
+                    } icon: {
+                        Image(systemName: "trash")
                     }
                     .staggeredScale(isActive: isHovered, index: 2)
                 }
-                BranchIconButton(systemName: "wand.and.stars", help: "Draft a PR with Claude") {
-                    onCreatePR(branch)
+                BranchIconButton(help: "Check out this branch locally") {
+                    onCheckout(branch)
+                } icon: {
+                    OcticonImage(paths: Octicons.gitBranchCheck)
                 }
                 .staggeredScale(isActive: isHovered, index: 1)
-                BranchIconButton(systemName: "arrow.down.circle", help: "Check out this branch locally") {
-                    onCheckout(branch)
+                BranchIconButton(help: "Draft a PR with Claude") {
+                    onCreatePR(branch)
+                } icon: {
+                    Image(systemName: "wand.and.stars")
                 }
                 .staggeredScale(isActive: isHovered, index: 0)
             }
@@ -152,12 +163,13 @@ private struct BranchChip: View {
 }
 
 /// An icon button matching the PR-row buttons: tap-bounce feedback plus the shared circular hover
-/// effect. Uses SF Symbols (branch actions have no Octicon equivalents).
-private struct BranchIconButton: View {
-    let systemName: String
+/// effect. The icon is caller-supplied so it can be an SF Symbol or an `OcticonImage` (checkout
+/// reuses the PR view's `gitBranchCheck` Octicon).
+private struct BranchIconButton<Icon: View>: View {
     let help: String
     var tint: Color = .primary
     let action: () -> Void
+    @ViewBuilder let icon: () -> Icon
     @State private var tapTrigger = 0
 
     var body: some View {
@@ -165,7 +177,7 @@ private struct BranchIconButton: View {
             tapTrigger += 1
             action()
         } label: {
-            Image(systemName: systemName).tapBounce(tapTrigger)
+            icon().tapBounce(tapTrigger)
         }
         .buttonStyle(.plain)
         .foregroundStyle(tint)

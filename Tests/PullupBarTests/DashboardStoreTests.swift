@@ -146,4 +146,13 @@ final class DashboardStoreTests: XCTestCase {
         let b = SettingsStore(defaults: defaults)
         XCTAssertEqual(b.createPRCommand, "open -a iTerm {script}")
     }
+
+    func testOpenClaudeOnCheckoutDefaultsFalseAndPersists() {
+        let defaults = UserDefaults(suiteName: "claudecheckout-\(UUID().uuidString)")!
+        let a = SettingsStore(defaults: defaults)
+        XCTAssertFalse(a.openClaudeOnCheckout)
+        a.openClaudeOnCheckout = true
+        let b = SettingsStore(defaults: defaults)
+        XCTAssertTrue(b.openClaudeOnCheckout)
+    }
 }

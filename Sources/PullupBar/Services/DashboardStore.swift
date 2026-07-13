@@ -92,7 +92,14 @@ final class DashboardStore: ObservableObject {
 
     func checkoutBranch(_ branch: BranchInfo) {
         let runner = processRunner
-        Task.detached(priority: .utility) { checkoutBranchLocally(branch, runner: runner) }
+        let openClaude = settings.openClaudeOnCheckout
+        let command = settings.createPRCommand
+        Task.detached(priority: .utility) {
+            checkoutBranchLocally(branch, runner: runner)
+            if openClaude {
+                launchClaudeSession(dir: branch.localCloneDir, command: command, runner: runner)
+            }
+        }
     }
 
     /// Delete the local branch, then drop it from the list so the row disappears without a reload.
@@ -134,8 +141,13 @@ final class DashboardStore: ObservableObject {
     func checkoutPullRequest(_ pr: PullRequestInfo) {
         let runner = processRunner
         let roots = settings.repoSearchRoots
+        let openClaude = settings.openClaudeOnCheckout
+        let command = settings.createPRCommand
         Task.detached(priority: .utility) {
             checkoutPullRequestBranch(repo: pr.repo, number: pr.number, runner: runner, searchRoots: roots)
+            if openClaude, let dir = localRepoDirectory(forRepo: pr.repo, searchRoots: roots) {
+                launchClaudeSession(dir: dir, command: command, runner: runner)
+            }
         }
     }
 
