@@ -5,6 +5,18 @@ A macOS menubar app showing Claude Code usage %, active sessions
 independent of any terminal statusline, so it works the same whether
 Claude Code runs in a terminal or the desktop app.
 
+## Features
+
+- **Usage** — Anthropic usage-window percentage, $ used / $ limit.
+- **Sessions** — every live Claude Code session (desktop + terminal),
+  with context-window % and running cost per session.
+- **Pull Requests** — your open PRs across all repos, with CI status,
+  draft/review/conflict tags, and age. The menu bar badge shows the
+  open PR count.
+
+Each section degrades independently to an "Unavailable" state if its
+data source fails — one broken source never blocks the rest of the panel.
+
 ## Build & run
 
     swift build
