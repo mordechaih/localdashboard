@@ -12,6 +12,7 @@ struct LocalDashboardApp: App {
             Group {
                 if store.badgeCount > 0 {
                     Image(nsImage: renderBadgeIcon(count: store.badgeCount))
+                        .renderingMode(.original)
                 } else {
                     Image(systemName: "gauge.medium")
                 }
@@ -23,22 +24,25 @@ struct LocalDashboardApp: App {
 }
 
 func renderBadgeIcon(count: Int) -> NSImage {
-    let size = 18
+    let logicalSize = 18
+    let scale = 3
+    let pixelSize = logicalSize * scale
     let colorSpace = CGColorSpaceCreateDeviceRGB()
     guard let ctx = CGContext(
         data: nil,
-        width: size,
-        height: size,
+        width: pixelSize,
+        height: pixelSize,
         bitsPerComponent: 8,
         bytesPerRow: 0,
         space: colorSpace,
         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
     ) else {
-        return NSImage(size: CGSize(width: size, height: size))
+        return NSImage(size: CGSize(width: logicalSize, height: logicalSize))
     }
 
-    let rect = CGRect(x: 0, y: 0, width: size, height: size)
-    let path = CGPath(roundedRect: rect, cornerWidth: 5, cornerHeight: 5, transform: nil)
+    let scaleFactor = CGFloat(scale)
+    let rect = CGRect(x: 0, y: 0, width: pixelSize, height: pixelSize)
+    let path = CGPath(roundedRect: rect, cornerWidth: 5 * scaleFactor, cornerHeight: 5 * scaleFactor, transform: nil)
     ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
     ctx.addPath(path)
     ctx.fillPath()
@@ -47,12 +51,12 @@ func renderBadgeIcon(count: Int) -> NSImage {
     NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
 
     let text = "\(count)" as NSString
-    let font = NSFont.systemFont(ofSize: 11, weight: .bold)
+    let font = NSFont.systemFont(ofSize: 11 * scaleFactor, weight: .bold)
     let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black]
     let textSize = text.size(withAttributes: attrs)
     let textRect = CGRect(
-        x: (CGFloat(size) - textSize.width) / 2,
-        y: (CGFloat(size) - textSize.height) / 2,
+        x: (CGFloat(pixelSize) - textSize.width) / 2,
+        y: (CGFloat(pixelSize) - textSize.height) / 2,
         width: textSize.width,
         height: textSize.height
     )
@@ -62,9 +66,9 @@ func renderBadgeIcon(count: Int) -> NSImage {
     NSGraphicsContext.restoreGraphicsState()
 
     guard let cgImage = ctx.makeImage() else {
-        return NSImage(size: CGSize(width: size, height: size))
+        return NSImage(size: CGSize(width: logicalSize, height: logicalSize))
     }
-    let image = NSImage(cgImage: cgImage, size: CGSize(width: size, height: size))
+    let image = NSImage(cgImage: cgImage, size: CGSize(width: logicalSize, height: logicalSize))
     image.isTemplate = false
     return image
 }
