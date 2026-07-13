@@ -19,11 +19,11 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(closedPRLimit, forKey: Keys.closedPRLimit) }
     }
 
-    /// Shell command run to open a terminal for a Claude session (Create PR, and checkout when
-    /// `openClaudeOnCheckout` is on). `{script}` is replaced with the path to a generated
-    /// `.command` script.
-    @Published var createPRCommand: String {
-        didSet { defaults.set(createPRCommand, forKey: Keys.createPRCommand) }
+    /// Path to the terminal `.app` used to open Claude sessions (Create PR, and checkout when
+    /// `openClaudeOnCheckout` is on). Empty string means the system default handler for `.command`
+    /// scripts (Terminal). Non-empty is passed to `open -a <path>`.
+    @Published var terminalAppPath: String {
+        didSet { defaults.set(terminalAppPath, forKey: Keys.terminalAppPath) }
     }
 
     /// When true, checking out a PR or branch also opens a Claude Code session in the clone folder.
@@ -37,14 +37,13 @@ final class SettingsStore: ObservableObject {
         static let repoSearchRoots = "repoSearchRoots"
         static let pollIntervalSeconds = "pollIntervalSeconds"
         static let closedPRLimit = "closedPRLimit"
-        static let createPRCommand = "createPRCommand"
+        static let terminalAppPath = "terminalAppPath"
         static let openClaudeOnCheckout = "openClaudeOnCheckout"
     }
 
     static let defaultRepoSearchRoot = NSString(string: "~/Documents/GitHub").expandingTildeInPath
     static let defaultPollIntervalSeconds = 60
     static let defaultClosedPRLimit = 20
-    static let defaultCreatePRCommand = "open {script}"
 
     static let pollIntervalOptions = [30, 60, 120, 300]
     static let closedPRLimitOptions = [10, 20, 50, 100]
@@ -56,8 +55,7 @@ final class SettingsStore: ObservableObject {
         self.pollIntervalSeconds = storedInterval > 0 ? storedInterval : Self.defaultPollIntervalSeconds
         let storedLimit = defaults.integer(forKey: Keys.closedPRLimit)
         self.closedPRLimit = storedLimit > 0 ? storedLimit : Self.defaultClosedPRLimit
-        let storedCommand = defaults.string(forKey: Keys.createPRCommand)
-        self.createPRCommand = (storedCommand?.isEmpty == false) ? storedCommand! : Self.defaultCreatePRCommand
+        self.terminalAppPath = defaults.string(forKey: Keys.terminalAppPath) ?? ""
         self.openClaudeOnCheckout = defaults.bool(forKey: Keys.openClaudeOnCheckout)
     }
 

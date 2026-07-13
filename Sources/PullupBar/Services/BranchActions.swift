@@ -56,46 +56,49 @@ private func writeCommandScript(_ contents: String) -> String? {
     }
 }
 
-/// Writes `contents` to a temp `.command` script, then runs the user's launch `command` (with
-/// `{script}` replaced by the script path) through `/bin/sh -c`, so templates like `open {script}`
-/// or `open -a iTerm {script}` work. `writeScript` is injected for tests.
+/// Writes `contents` to a temp `.command` script, then opens it in a terminal via `open`. An empty
+/// `appPath` uses the system default handler (`open <script>`, i.e. Terminal); otherwise the app at
+/// `appPath` is used (`open -a <appPath> <script>`). No shell is involved, so app paths with spaces
+/// are safe. `writeScript` is injected for tests.
 @discardableResult
 private func launchScript(
     _ contents: String,
-    command: String,
+    appPath: String,
     runner: ProcessRunning,
     writeScript: (String) -> String?
 ) -> Bool {
     guard let scriptPath = writeScript(contents) else { return false }
-    let resolved = command.replacingOccurrences(of: "{script}", with: scriptPath)
-    return runner.run("/bin/sh", ["-c", resolved]) != nil
+    let args = appPath.isEmpty ? [scriptPath] : ["-a", appPath, scriptPath]
+    return runner.run("/usr/bin/open", args) != nil
 }
 
 /// Opens a terminal that checks out `branch` and launches Claude Code with the PR-draft prompt.
+/// `appPath` is the terminal `.app` to use (empty = system default).
 @discardableResult
 func launchPRDraftSession(
     _ branch: BranchInfo,
-    command: String,
+    appPath: String,
     runner: ProcessRunning,
     writeScript: (String) -> String? = writeCommandScript
 ) -> Bool {
     launchScript(
         prDraftScriptContents(dir: branch.localCloneDir, branch: branch.name, prompt: prDraftPrompt),
-        command: command, runner: runner, writeScript: writeScript
+        appPath: appPath, runner: runner, writeScript: writeScript
     )
 }
 
 /// Opens a terminal with an interactive Claude Code session in `dir` (no prompt). Used after a
-/// checkout when the "open Claude on checkout" setting is enabled.
+/// checkout when the "open Claude on checkout" setting is enabled. `appPath` is the terminal `.app`
+/// to use (empty = system default).
 @discardableResult
 func launchClaudeSession(
     dir: String,
-    command: String,
+    appPath: String,
     runner: ProcessRunning,
     writeScript: (String) -> String? = writeCommandScript
 ) -> Bool {
     launchScript(
         claudeSessionScriptContents(dir: dir),
-        command: command, runner: runner, writeScript: writeScript
+        appPath: appPath, runner: runner, writeScript: writeScript
     )
 }

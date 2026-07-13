@@ -55,23 +55,34 @@ final class BranchActionsTests: XCTestCase {
         XCTAssertTrue(script.contains("git checkout 'it'\\''s; echo pwn'"))
     }
 
-    func testLaunchSubstitutesScriptPathAndRunsViaSh() {
+    func testLaunchPRDraftOpensScriptWithChosenApp() {
         let runner = ArgCapturingRunner()
         var writtenTo: String?
         let ok = launchPRDraftSession(
-            sampleBranch, command: "open -a iTerm {script}", runner: runner,
+            sampleBranch, appPath: "/Applications/iTerm.app", runner: runner,
             writeScript: { _ in writtenTo = "/tmp/x.command"; return "/tmp/x.command" }
         )
         XCTAssertTrue(ok)
         XCTAssertEqual(writtenTo, "/tmp/x.command")
-        XCTAssertEqual(runner.lastPath, "/bin/sh")
-        XCTAssertEqual(runner.lastArgs, ["-c", "open -a iTerm /tmp/x.command"])
+        XCTAssertEqual(runner.lastPath, "/usr/bin/open")
+        XCTAssertEqual(runner.lastArgs, ["-a", "/Applications/iTerm.app", "/tmp/x.command"])
+    }
+
+    func testLaunchPRDraftUsesDefaultHandlerWhenNoApp() {
+        let runner = ArgCapturingRunner()
+        let ok = launchPRDraftSession(
+            sampleBranch, appPath: "", runner: runner,
+            writeScript: { _ in "/tmp/x.command" }
+        )
+        XCTAssertTrue(ok)
+        XCTAssertEqual(runner.lastPath, "/usr/bin/open")
+        XCTAssertEqual(runner.lastArgs, ["/tmp/x.command"])
     }
 
     func testLaunchFailsWhenScriptCannotBeWritten() {
         let runner = ArgCapturingRunner()
         let ok = launchPRDraftSession(
-            sampleBranch, command: "open {script}", runner: runner,
+            sampleBranch, appPath: "", runner: runner,
             writeScript: { _ in nil }
         )
         XCTAssertFalse(ok)
@@ -91,20 +102,27 @@ final class BranchActionsTests: XCTestCase {
         XCTAssertTrue(script.contains("cd '/weird'\\''; touch pwn'"))
     }
 
-    func testLaunchClaudeSessionSubstitutesScriptPathAndRunsViaSh() {
+    func testLaunchClaudeSessionOpensScriptWithChosenApp() {
         let runner = ArgCapturingRunner()
         let ok = launchClaudeSession(
-            dir: "/clones/r", command: "open -a iTerm {script}", runner: runner,
+            dir: "/clones/r", appPath: "/Applications/Ghostty.app", runner: runner,
             writeScript: { _ in "/tmp/x.command" }
         )
         XCTAssertTrue(ok)
-        XCTAssertEqual(runner.lastPath, "/bin/sh")
-        XCTAssertEqual(runner.lastArgs, ["-c", "open -a iTerm /tmp/x.command"])
+        XCTAssertEqual(runner.lastPath, "/usr/bin/open")
+        XCTAssertEqual(runner.lastArgs, ["-a", "/Applications/Ghostty.app", "/tmp/x.command"])
+    }
+
+    func testLaunchClaudeSessionUsesDefaultHandlerWhenNoApp() {
+        let runner = ArgCapturingRunner()
+        let ok = launchClaudeSession(dir: "/clones/r", appPath: "", runner: runner, writeScript: { _ in "/tmp/x.command" })
+        XCTAssertTrue(ok)
+        XCTAssertEqual(runner.lastArgs, ["/tmp/x.command"])
     }
 
     func testLaunchClaudeSessionFailsWhenScriptCannotBeWritten() {
         let runner = ArgCapturingRunner()
-        let ok = launchClaudeSession(dir: "/clones/r", command: "open {script}", runner: runner, writeScript: { _ in nil })
+        let ok = launchClaudeSession(dir: "/clones/r", appPath: "", runner: runner, writeScript: { _ in nil })
         XCTAssertFalse(ok)
         XCTAssertNil(runner.lastArgs)
     }

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 /// The settings panel shown in place of the PR list when the footer gear is tapped. Fixed to the
 /// same width/height as `PullRequestsSectionView` so toggling never resizes the hosting window.
@@ -18,7 +19,7 @@ struct SettingsView: View {
                 refreshIntervalSection
                 closedCountSection
                 openClaudeOnCheckoutSection
-                terminalCommandSection
+                terminalAppSection
             }
             .padding(16)
             .frame(width: Self.width, alignment: .leading)
@@ -105,23 +106,74 @@ struct SettingsView: View {
             Toggle(isOn: $settings.openClaudeOnCheckout) {
                 Text("Open Claude on checkout").font(.system(size: 13, weight: .bold))
             }
-            Text("After checking out a PR or branch, also open a Claude Code session in the clone folder, using the terminal command below.")
+            Text("After checking out a PR or branch, also open a Claude Code session in the clone folder, using the terminal app below.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    private var terminalCommandSection: some View {
+    private var terminalAppSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Terminal command").font(.system(size: 13, weight: .bold))
-            Text("Opens the Claude Code sessions launched by Create PR and by \u{201C}Open Claude on checkout\u{201D}. {script} is replaced with a generated script that cds into the clone and launches Claude Code.")
+            Text("Terminal app").font(.system(size: 13, weight: .bold))
+            Text("Opens the Claude Code sessions launched by \u{201C}Create PR\u{201D} and by \u{201C}Open Claude on checkout\u{201D}.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            TextField("open {script}", text: $settings.createPRCommand)
-                .textFieldStyle(.roundedBorder)
+            Menu {
+                Button { settings.terminalAppPath = "" } label: {
+                    appMenuLabel(name: "Terminal", path: "")
+                }
+                ForEach(TerminalApp.detectInstalled(), id: \.path) { app in
+                    Button { settings.terminalAppPath = app.path } label: {
+                        appMenuLabel(name: app.name, path: app.path)
+                    }
+                }
+                Divider()
+                Button("Choose app…") { chooseTerminalApp() }
+            } label: {
+                HStack {
+                    Image(nsImage: TerminalApp.icon(forPath: settings.terminalAppPath))
+                        .resizable().frame(width: 16, height: 16)
+                    Text(terminalAppLabel)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10)).foregroundStyle(.secondary)
+                }
                 .font(.system(size: 12))
+            }
+            .menuStyle(.borderlessButton)
+        }
+    }
+
+    /// A menu row pairing an app's Finder icon with its name.
+    private func appMenuLabel(name: String, path: String) -> some View {
+        Label {
+            Text(name)
+        } icon: {
+            Image(nsImage: TerminalApp.icon(forPath: path))
+                .resizable().frame(width: 16, height: 16)
+        }
+    }
+
+    /// Display name for the current selection: empty means the system default (Terminal), otherwise
+    /// the chosen `.app`'s name.
+    private var terminalAppLabel: String {
+        let path = settings.terminalAppPath
+        guard !path.isEmpty else { return "Terminal" }
+        return (path as NSString).lastPathComponent.replacingOccurrences(of: ".app", with: "")
+    }
+
+    private func chooseTerminalApp() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.application]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.prompt = "Choose"
+        panel.message = "Choose the terminal app to open Claude sessions in"
+        if panel.runModal() == .OK, let url = panel.url {
+            settings.terminalAppPath = url.path
         }
     }
 

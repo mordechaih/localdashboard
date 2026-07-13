@@ -138,13 +138,13 @@ final class DashboardStoreTests: XCTestCase {
         XCTAssertEqual(store.noPRBranches.map(\.name), ["feature"])
     }
 
-    func testCreatePRCommandDefaultsAndPersists() {
-        let defaults = UserDefaults(suiteName: "createpr-\(UUID().uuidString)")!
+    func testTerminalAppPathDefaultsEmptyAndPersists() {
+        let defaults = UserDefaults(suiteName: "termapp-\(UUID().uuidString)")!
         let a = SettingsStore(defaults: defaults)
-        XCTAssertEqual(a.createPRCommand, SettingsStore.defaultCreatePRCommand)
-        a.createPRCommand = "open -a iTerm {script}"
+        XCTAssertEqual(a.terminalAppPath, "")
+        a.terminalAppPath = "/Applications/iTerm.app"
         let b = SettingsStore(defaults: defaults)
-        XCTAssertEqual(b.createPRCommand, "open -a iTerm {script}")
+        XCTAssertEqual(b.terminalAppPath, "/Applications/iTerm.app")
     }
 
     func testOpenClaudeOnCheckoutDefaultsFalseAndPersists() {

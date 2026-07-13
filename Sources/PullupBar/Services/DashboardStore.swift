@@ -93,11 +93,11 @@ final class DashboardStore: ObservableObject {
     func checkoutBranch(_ branch: BranchInfo) {
         let runner = processRunner
         let openClaude = settings.openClaudeOnCheckout
-        let command = settings.createPRCommand
+        let appPath = settings.terminalAppPath
         Task.detached(priority: .utility) {
             checkoutBranchLocally(branch, runner: runner)
             if openClaude {
-                launchClaudeSession(dir: branch.localCloneDir, command: command, runner: runner)
+                launchClaudeSession(dir: branch.localCloneDir, appPath: appPath, runner: runner)
             }
         }
     }
@@ -113,8 +113,8 @@ final class DashboardStore: ObservableObject {
 
     func createPRForBranch(_ branch: BranchInfo) {
         let runner = processRunner
-        let command = settings.createPRCommand
-        Task.detached(priority: .utility) { launchPRDraftSession(branch, command: command, runner: runner) }
+        let appPath = settings.terminalAppPath
+        Task.detached(priority: .utility) { launchPRDraftSession(branch, appPath: appPath, runner: runner) }
     }
 
     /// Switch filters, loading each tab's data on first access: closed PRs for Merged/Closed
@@ -142,11 +142,11 @@ final class DashboardStore: ObservableObject {
         let runner = processRunner
         let roots = settings.repoSearchRoots
         let openClaude = settings.openClaudeOnCheckout
-        let command = settings.createPRCommand
+        let appPath = settings.terminalAppPath
         Task.detached(priority: .utility) {
             checkoutPullRequestBranch(repo: pr.repo, number: pr.number, runner: runner, searchRoots: roots)
             if openClaude, let dir = localRepoDirectory(forRepo: pr.repo, searchRoots: roots) {
-                launchClaudeSession(dir: dir, command: command, runner: runner)
+                launchClaudeSession(dir: dir, appPath: appPath, runner: runner)
             }
         }
     }
