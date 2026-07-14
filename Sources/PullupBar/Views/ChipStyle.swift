@@ -30,7 +30,16 @@ struct ChipBlurScrim: View {
             )
             .frame(maxWidth: .infinity, alignment: .trailing)
             .allowsHitTesting(false)
+            // Flatten the frosted material to an offscreen layer BEFORE fading it. Applying opacity
+            // straight to a Material blends its vibrancy live at every intermediate alpha, and a
+            // partially-faded material over the card's own material peaks brighter than either the
+            // hidden or fully-shown state — a visible flash mid-transition. compositingGroup rasters
+            // the scrim once at full strength so opacity then fades that flat image linearly.
+            .compositingGroup()
             .opacity(isHovered ? 1 : 0)
+            // easeInOut (not the ancestor's bouncy hover spring) keeps the fade monotonic so the
+            // flattened scrim never overshoots its target opacity.
+            .animation(.easeInOut(duration: 0.2), value: isHovered)
     }
 }
 
