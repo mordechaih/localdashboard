@@ -8,6 +8,10 @@ struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
     let maxContentHeight: CGFloat
 
+    /// Mirrors the system login-item state. Not persisted here — `SMAppService` is the source of
+    /// truth, so we read it on appear and write through on change.
+    @State private var launchAtLogin = LaunchAtLogin.isEnabled
+
     private static let width: CGFloat = 380
     private var fixedHeight: CGFloat { min(420, maxContentHeight) }
 
@@ -18,6 +22,7 @@ struct SettingsView: View {
                 repoFoldersSection
                 refreshIntervalSection
                 closedCountSection
+                launchAtLoginSection
                 openClaudeOnCheckoutSection
                 terminalAppSection
             }
@@ -25,6 +30,25 @@ struct SettingsView: View {
             .frame(width: Self.width, alignment: .leading)
         }
         .frame(width: Self.width, height: fixedHeight)
+        .onAppear { launchAtLogin = LaunchAtLogin.isEnabled }
+    }
+
+    private var launchAtLoginSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: $launchAtLogin) {
+                Text("Launch at login").font(.system(size: 13, weight: .bold))
+            }
+            .onChange(of: launchAtLogin) { newValue in
+                // Revert to the actual system state if register/unregister failed.
+                if !LaunchAtLogin.setEnabled(newValue) {
+                    launchAtLogin = LaunchAtLogin.isEnabled
+                }
+            }
+            Text("Start PullupBar automatically when you log in to your Mac.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private var repoFoldersSection: some View {
