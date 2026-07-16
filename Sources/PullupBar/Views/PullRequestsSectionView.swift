@@ -20,7 +20,7 @@ struct PullRequestsSectionView: View {
     /// One page spans the full window width; the 16pt horizontal breathing room lives *inside*
     /// each page (see `page`) so the clip sits at the window edge and the spring overshoot slides
     /// into the padding instead of slicing chips at the padding line.
-    private static let pageWidth: CGFloat = 380
+    private static let pageWidth: CGFloat = DashboardMetrics.panelWidth
     private static let pagePadding: CGFloat = 16
     private static let slide: Animation = .spring(response: 0.4, dampingFraction: 0.85)
 

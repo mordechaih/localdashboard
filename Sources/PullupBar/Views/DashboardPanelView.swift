@@ -34,7 +34,7 @@ struct DashboardPanelView: View {
             Divider()
             footer
         }
-        .frame(width: 380)
+        .frame(width: DashboardMetrics.panelWidth)
     }
 
     private var footer: some View {

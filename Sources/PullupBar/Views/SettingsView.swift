@@ -12,7 +12,7 @@ struct SettingsView: View {
     /// truth, so we read it on appear and write through on change.
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
 
-    private static let width: CGFloat = 380
+    private static let width: CGFloat = DashboardMetrics.panelWidth
     private var fixedHeight: CGFloat { min(420, maxContentHeight) }
 
     var body: some View {
