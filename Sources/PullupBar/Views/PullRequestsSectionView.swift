@@ -304,7 +304,7 @@ private struct PullRequestChip: View {
     private var titleText: some View {
         Text(pr.title)
             .foregroundColor(.primary)
-            .font(.system(size: 13, design: .monospaced))
+            .font(.system(size: 13))
             .fontWeight(.semibold)
             .lineLimit(1)
             .truncationMode(.tail)
