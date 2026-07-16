@@ -90,7 +90,7 @@ private struct BranchChip: View {
 
     private var metaRow: some View {
         HStack(spacing: 6) {
-            Text(verbatim: repoShortName).fixedSize()
+            Text(verbatim: repoShortName).monospaced().fixedSize()
             Text("·")
             Text(locationLabel)
             Spacer()
